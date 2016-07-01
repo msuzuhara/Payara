@@ -37,27 +37,9 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.ejb.deployment.descriptor;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.sun.enterprise.container.common.spi.JCDIService;
 import com.sun.enterprise.deployment.Application;
 import com.sun.enterprise.deployment.CommonResourceDescriptor;
 import com.sun.enterprise.deployment.EjbIORConfigurationDescriptor;
@@ -87,6 +69,24 @@ import com.sun.enterprise.deployment.WritableJndiNameEnvironment;
 import com.sun.enterprise.deployment.types.EjbReference;
 import com.sun.enterprise.deployment.util.DOLUtils;
 import com.sun.enterprise.util.LocalStringManagerImpl;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.inject.Inject;
 import org.glassfish.deployment.common.Descriptor;
 import org.glassfish.deployment.common.DescriptorVisitor;
 import org.glassfish.deployment.common.JavaEEResourceType;
@@ -95,20 +95,17 @@ import org.glassfish.ejb.deployment.descriptor.runtime.IASEjbExtraDescriptors;
 import org.glassfish.ejb.deployment.util.EjbVisitor;
 import org.glassfish.ejb.deployment.util.InterceptorBindingTranslator;
 import org.glassfish.ejb.deployment.util.InterceptorBindingTranslator.TranslationResults;
-import org.glassfish.security.common.Role;
-import org.glassfish.internal.api.Globals;
-import com.sun.enterprise.container.common.spi.JCDIService;
 import org.glassfish.hk2.api.ServiceLocator;
-import javax.inject.Inject;
+import org.glassfish.internal.api.Globals;
+import org.glassfish.security.common.Role;
 
 /**
- * This abstract class encapsulates the meta-information describing
- * Entity, Session and MessageDriven EJBs.
+ * This abstract class encapsulates the meta-information describing Entity,
+ * Session and MessageDriven EJBs.
  *
  * @author Danny Coward
  * @author Sanjeev Krishnan
  */
-
 public abstract class EjbDescriptor extends CommonResourceDescriptor
         implements com.sun.enterprise.deployment.EjbDescriptor {
 
@@ -128,7 +125,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     private String jndiName = "";
     private String mappedName = "";
 
-    // Is set to true if this bean exposes a no-interface view 
+    // Is set to true if this bean exposes a no-interface view
     private boolean localBean = false;
 
     // Used in <transaction-scope> element in XML
@@ -140,51 +137,48 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     private Hashtable methodContainerTransactions = null;
     private Hashtable permissionedMethodsByPermission = null;
     private HashMap methodPermissionsFromDD = null;
-    private Set<EnvironmentProperty> environmentProperties =
-            new HashSet<EnvironmentProperty>();
-    private Set<EjbReference> ejbReferences =
-            new HashSet<EjbReference>();
-    private Set<ResourceEnvReferenceDescriptor> resourceEnvReferences =
-            new HashSet<ResourceEnvReferenceDescriptor>();
-    private Set<MessageDestinationReferenceDescriptor> messageDestReferences =
-            new HashSet<MessageDestinationReferenceDescriptor>();
-    private Set<ResourceReferenceDescriptor> resourceReferences =
-            new HashSet<ResourceReferenceDescriptor>();
-    private Set<ServiceReferenceDescriptor> serviceReferences =
-            new HashSet<ServiceReferenceDescriptor>();
+    private Set<EnvironmentProperty> environmentProperties
+            = new HashSet<EnvironmentProperty>();
+    private Set<EjbReference> ejbReferences
+            = new HashSet<EjbReference>();
+    private Set<ResourceEnvReferenceDescriptor> resourceEnvReferences
+            = new HashSet<ResourceEnvReferenceDescriptor>();
+    private Set<MessageDestinationReferenceDescriptor> messageDestReferences
+            = new HashSet<MessageDestinationReferenceDescriptor>();
+    private Set<ResourceReferenceDescriptor> resourceReferences
+            = new HashSet<ResourceReferenceDescriptor>();
+    private Set<ServiceReferenceDescriptor> serviceReferences
+            = new HashSet<ServiceReferenceDescriptor>();
 
-    private Set<LifecycleCallbackDescriptor> postConstructDescs =
-            new HashSet<LifecycleCallbackDescriptor>();
-    private Set<LifecycleCallbackDescriptor> preDestroyDescs =
-            new HashSet<LifecycleCallbackDescriptor>();
+    private Set<LifecycleCallbackDescriptor> postConstructDescs
+            = new HashSet<LifecycleCallbackDescriptor>();
+    private Set<LifecycleCallbackDescriptor> preDestroyDescs
+            = new HashSet<LifecycleCallbackDescriptor>();
 
     // if non-null, refer all environment refs here
     private WritableJndiNameEnvironment env;
 
-    private Set<LifecycleCallbackDescriptor> aroundInvokeDescs =
-            new HashSet<LifecycleCallbackDescriptor>();
-    private Set<LifecycleCallbackDescriptor> aroundTimeoutDescs =
-            new HashSet<LifecycleCallbackDescriptor>();
-
+    private Set<LifecycleCallbackDescriptor> aroundInvokeDescs
+            = new HashSet<LifecycleCallbackDescriptor>();
+    private Set<LifecycleCallbackDescriptor> aroundTimeoutDescs
+            = new HashSet<LifecycleCallbackDescriptor>();
 
     // Late-binding system-level interceptors for this EJB.  These can be set
     // as late as initialization time, so they are not part of the interceptor
     // binding translation that happens for application-defined interceptors.
     private List<InterceptorDescriptor> frameworkInterceptors = new LinkedList<InterceptorDescriptor>();
 
-    private Set<EntityManagerFactoryReferenceDescriptor>
-            entityManagerFactoryReferences =
-            new HashSet<EntityManagerFactoryReferenceDescriptor>();
+    private Set<EntityManagerFactoryReferenceDescriptor> entityManagerFactoryReferences
+            = new HashSet<EntityManagerFactoryReferenceDescriptor>();
 
-    private Set<EntityManagerReferenceDescriptor>
-            entityManagerReferences =
-            new HashSet<EntityManagerReferenceDescriptor>();
+    private Set<EntityManagerReferenceDescriptor> entityManagerReferences
+            = new HashSet<EntityManagerReferenceDescriptor>();
 
     private Set roleReferences = new HashSet();
     private EjbBundleDescriptorImpl bundleDescriptor;
     // private EjbIORConfigurationDescriptor iorConfigDescriptor = new EjbIORConfigurationDescriptor();
-    private Set<EjbIORConfigurationDescriptor> iorConfigDescriptors =
-            new OrderedSet<EjbIORConfigurationDescriptor>();
+    private Set<EjbIORConfigurationDescriptor> iorConfigDescriptors
+            = new OrderedSet<EjbIORConfigurationDescriptor>();
     //private Set methodDescriptors = new HashSet();
     private String ejbClassName;
 
@@ -210,40 +204,40 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     private MethodDescriptor timedObjectMethod;
 
-    private List<ScheduledTimerDescriptor> timerSchedules =
-            new ArrayList<ScheduledTimerDescriptor>();
+    private List<ScheduledTimerDescriptor> timerSchedules
+            = new ArrayList<ScheduledTimerDescriptor>();
 
-    private List<MethodDescriptor> timerMethodDescriptors =
-            new ArrayList<MethodDescriptor>();
+    private List<MethodDescriptor> timerMethodDescriptors
+            = new ArrayList<MethodDescriptor>();
 
     //
-    // The set of all interceptor classes applicable to this bean.  This 
+    // The set of all interceptor classes applicable to this bean.  This
     // includes any interceptor class that is present at *either* the class
     // level or method-level.
     //
-    private Set<EjbInterceptor> allInterceptorClasses =
-            new HashSet<EjbInterceptor>();
+    private Set<EjbInterceptor> allInterceptorClasses
+            = new HashSet<EjbInterceptor>();
 
-    // Ordered list of class-level interceptors for this bean.  
-    private List<EjbInterceptor> interceptorChain =
-            new LinkedList<EjbInterceptor>();
+    // Ordered list of class-level interceptors for this bean.
+    private List<EjbInterceptor> interceptorChain
+            = new LinkedList<EjbInterceptor>();
 
     //
     // Interceptor info per business method.  If the map does not
     // contain an entry for the business method, there is no method-specific
     // interceptor information for that method.  In that case the standard
-    // class-level interceptor information applies.  
+    // class-level interceptor information applies.
     //
-    // If there is an entry for the business method, the corresponding list 
-    // represents the *complete* ordered list of interceptor classes for that 
+    // If there is an entry for the business method, the corresponding list
+    // represents the *complete* ordered list of interceptor classes for that
     // method.  An empty list would mean all the interceptors have been
     // disabled for that particular business method.
-    // 
-    private Map<MethodDescriptor, List<EjbInterceptor>> methodInterceptorsMap =
-            new HashMap<MethodDescriptor, List<EjbInterceptor>>();
+    //
+    private Map<MethodDescriptor, List<EjbInterceptor>> methodInterceptorsMap
+            = new HashMap<MethodDescriptor, List<EjbInterceptor>>();
 
-    private static LocalStringManagerImpl localStrings =
-            new LocalStringManagerImpl(EjbDescriptor.class);
+    private static LocalStringManagerImpl localStrings
+            = new LocalStringManagerImpl(EjbDescriptor.class);
 
     static Logger _logger = DOLUtils.getDefaultLogger();
 
@@ -253,8 +247,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     /**
      * returns the extra iAS specific info (not in the RI DID) in the iAS DTD.
-     * no setter. You have to modify some fields of the returned object to change it.
-     * TODO: check if we need to clone it in the Copy Constructor...
+     * no setter. You have to modify some fields of the returned object to
+     * change it. TODO: check if we need to clone it in the Copy Constructor...
      */
     public IASEjbExtraDescriptors getIASEjbExtraDescriptors() {
         return iASEjbExtraDescriptors;
@@ -270,14 +264,14 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         super(other);
         this.homeClassName = other.homeClassName;
         this.remoteClassName = other.remoteClassName;
-        this.remoteBusinessClassNames = 
-            new HashSet<String>(other.remoteBusinessClassNames);
+        this.remoteBusinessClassNames
+                = new HashSet<String>(other.remoteBusinessClassNames);
         this.localHomeClassName = other.localHomeClassName;
         this.localClassName = other.localClassName;
-        this.localBusinessClassNames = 
-            new HashSet<String>(other.localBusinessClassNames);
-        this.webServiceEndpointInterfaceName = 
-            other.webServiceEndpointInterfaceName;
+        this.localBusinessClassNames
+                = new HashSet<String>(other.localBusinessClassNames);
+        this.webServiceEndpointInterfaceName
+                = other.webServiceEndpointInterfaceName;
         this.localBean = other.localBean;
         this.jndiName = other.jndiName;
         addEjbDescriptor(other);
@@ -301,8 +295,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
             this.getServiceReferenceDescriptors().addAll(other.getServiceReferenceDescriptors());
             // XXX - why not addAll?
             Set<ResourceDescriptor> allDescriptors = other.getAllResourcesDescriptors();
-            if(allDescriptors.size() > 0){
-                for(ResourceDescriptor desc : allDescriptors){
+            if (allDescriptors.size() > 0) {
+                for (ResourceDescriptor desc : allDescriptors) {
                     this.addResourceDescriptor(desc);
                 }
             }
@@ -320,39 +314,38 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     public abstract void setType(String type);
-    
-    /**
-    * Returns the classname of the Home interface of this ejb. 
-    */
-    public String getHomeClassName() {
-    return this.homeClassName;
-    }
-    
-    /** 
-    * Sets the classname of the Home interface of this ejb. 
-    */
-    public void setHomeClassName(String homeClassName) {
-    this.homeClassName = homeClassName;
-    }
-    
-    /**
-    * Sets the classname of the Remote interface of this ejb. 
-    */
-    public void setRemoteClassName(String remoteClassName) {
-    this.remoteClassName = remoteClassName;
-    }
-    
 
     /**
-    * Returns the classname of the Remote interface of this ejb.
-    */
+     * Returns the classname of the Home interface of this ejb.
+     */
+    public String getHomeClassName() {
+        return this.homeClassName;
+    }
+
+    /**
+     * Sets the classname of the Home interface of this ejb.
+     */
+    public void setHomeClassName(String homeClassName) {
+        this.homeClassName = homeClassName;
+    }
+
+    /**
+     * Sets the classname of the Remote interface of this ejb.
+     */
+    public void setRemoteClassName(String remoteClassName) {
+        this.remoteClassName = remoteClassName;
+    }
+
+    /**
+     * Returns the classname of the Remote interface of this ejb.
+     */
     public String getRemoteClassName() {
         return this.remoteClassName;
     }
 
     /**
      * Sets the classname for the local home interface of this ejb
-     * 
+     *
      * @param localHomeClassName fully qualified class name for the interface
      */
     public void setLocalHomeClassName(String localHomeClassName) {
@@ -360,7 +353,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * @return the fully qualified class name for the local home interface of this ejb
+     * @return the fully qualified class name for the local home interface of
+     * this ejb
      */
     public String getLocalHomeClassName() {
         return localHomeClassName;
@@ -368,7 +362,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     /**
      * Sets the classname for the local interface of this ejb
-     * 
+     *
      * @param localClassName fully qualified class name for the interface
      */
     public void setLocalClassName(String localClassName) {
@@ -376,7 +370,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * @return the fully qualified class name for the local interface of this ejb
+     * @return the fully qualified class name for the local interface of this
+     * ejb
      */
     public String getLocalClassName() {
         return localClassName;
@@ -384,7 +379,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     /**
      * Add a classname for a no-interface view of the local ejb
-     * 
+     *
      * @param className fully qualified class name for the interface
      */
     public void addNoInterfaceLocalBeanClass(String className) {
@@ -407,21 +402,19 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Returns the set of remote business interface names for this ejb.
-     * If the bean does not expose a remote business view, return a set
-     * of size 0.
+     * Returns the set of remote business interface names for this ejb. If the
+     * bean does not expose a remote business view, return a set of size 0.
      */
     public Set<String> getRemoteBusinessClassNames() {
-        return new HashSet<String>( remoteBusinessClassNames );
+        return new HashSet<String>(remoteBusinessClassNames);
     }
 
     /**
-     * Returns the set of local business interface names for this ejb.
-     * If the bean does not expose a local business view, return a set
-     * of size 0.
+     * Returns the set of local business interface names for this ejb. If the
+     * bean does not expose a local business view, return a set of size 0.
      */
     public Set<String> getLocalBusinessClassNames() {
-        return new HashSet<String>( localBusinessClassNames );
+        return new HashSet<String>(localBusinessClassNames);
     }
 
     public void setWebServiceEndpointInterfaceName(String name) {
@@ -437,8 +430,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         if (this.jndiName == null) {
             this.jndiName = "";
         }
-        return (jndiName != null && jndiName.length() > 0)?
-                jndiName : getMappedName();
+        return (jndiName != null && jndiName.length() > 0)
+                ? jndiName : getMappedName();
     }
 
     @Override
@@ -450,7 +443,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     public String getMappedName() {
-        return (mappedName != null)? mappedName : "";
+        return (mappedName != null) ? mappedName : "";
     }
 
     public void setMappedName(String mappedName) {
@@ -482,7 +475,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      * @return true if the EJB has a RemoteHome/Remote interface
      */
     public boolean isRemoteInterfacesSupported() {
-        return (getHomeClassName() != null);        
+        return (getHomeClassName() != null);
     }
 
     /**
@@ -496,7 +489,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      * @return true if this is an EJB that implements a web service endpoint.
      */
     public boolean hasWebServiceEndpointInterface() {
-        return (getWebServiceEndpointInterfaceName() != null);        
+        return (getWebServiceEndpointInterfaceName() != null);
     }
 
     /**
@@ -521,12 +514,12 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * IASRI 4725194
-     * Returns the Execution class ,which is same as the user-specified class
-     * in case of Message,Session and Bean Managed Persistence Entity Beans
-     * but is different for Container Mananged Persistence Entity Bean
-     * Therefore,the implementation in the base class is to return
-     * getEjbClassName() and the method is redefined in IASEjbCMPDescriptor.
+     * IASRI 4725194 Returns the Execution class ,which is same as the
+     * user-specified class in case of Message,Session and Bean Managed
+     * Persistence Entity Beans but is different for Container Mananged
+     * Persistence Entity Bean Therefore,the implementation in the base class is
+     * to return getEjbClassName() and the method is redefined in
+     * IASEjbCMPDescriptor.
      */
     public String getEjbImplClassName() {
         return this.getEjbClassName();
@@ -560,7 +553,6 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         return this.localHomeImplClassName;
     }
 
-
     /**
      * Sets the EJBLocalObject implementation classname of the ejb.
      */
@@ -574,7 +566,6 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     public String getEJBLocalObjectImplClassName() {
         return this.ejbLocalObjectImplClassName;
     }
-
 
     /**
      * Sets the EJBObject implementation classname of the ejb.
@@ -603,24 +594,17 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     public abstract void setTransactionType(String transactionType);
 
     /**
-     * Returns the set of transaction attributes that can be assigned
-     * to methods of this ejb when in CMT mode. Elements are of type
-     * ContainerTransaction
+     * Returns the set of transaction attributes that can be assigned to methods
+     * of this ejb when in CMT mode. Elements are of type ContainerTransaction
      */
     public Vector getPossibleTransactionAttributes() {
         Vector txAttributes = new Vector();
-        txAttributes.add(new ContainerTransaction
-                (ContainerTransaction.MANDATORY, ""));
-        txAttributes.add(new ContainerTransaction
-                (ContainerTransaction.NEVER, ""));
-        txAttributes.add(new ContainerTransaction
-                (ContainerTransaction.NOT_SUPPORTED, ""));
-        txAttributes.add(new ContainerTransaction
-                (ContainerTransaction.REQUIRED, ""));
-        txAttributes.add(new ContainerTransaction
-                (ContainerTransaction.REQUIRES_NEW, ""));
-        txAttributes.add(new ContainerTransaction
-                (ContainerTransaction.SUPPORTS, ""));
+        txAttributes.add(new ContainerTransaction(ContainerTransaction.MANDATORY, ""));
+        txAttributes.add(new ContainerTransaction(ContainerTransaction.NEVER, ""));
+        txAttributes.add(new ContainerTransaction(ContainerTransaction.NOT_SUPPORTED, ""));
+        txAttributes.add(new ContainerTransaction(ContainerTransaction.REQUIRED, ""));
+        txAttributes.add(new ContainerTransaction(ContainerTransaction.REQUIRES_NEW, ""));
+        txAttributes.add(new ContainerTransaction(ContainerTransaction.SUPPORTS, ""));
         return txAttributes;
     }
 
@@ -641,7 +625,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     *  Special method for overrides because more than one schedule can be specified on a single method
+     * Special method for overrides because more than one schedule can be
+     * specified on a single method
      */
     public void addScheduledTimerDescriptorFromDD(ScheduledTimerDescriptor scheduleDescriptor) {
         timerMethodDescriptors.add(scheduleDescriptor.getTimeoutMethod());
@@ -651,11 +636,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     public boolean hasScheduledTimerMethodFromDD(Method timerMethod) {
         boolean match = false;
 
-        for(MethodDescriptor next : timerMethodDescriptors) {
-            if( next.getName().equals(timerMethod.getName()) &&
-                ( next.getParameterClassNames() == null ||
-		    next.getParameterClassNames().length ==
-		        timerMethod.getParameterTypes().length) ) {
+        for (MethodDescriptor next : timerMethodDescriptors) {
+            if (next.getName().equals(timerMethod.getName())
+                    && (next.getParameterClassNames() == null
+                    || next.getParameterClassNames().length
+                    == timerMethod.getParameterTypes().length)) {
                 match = true;
                 break;
             }
@@ -672,12 +657,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         return aroundInvokeDescs;
     }
 
-    public void addAroundInvokeDescriptor(LifecycleCallbackDescriptor
-            aroundInvokeDesc) {
+    public void addAroundInvokeDescriptor(LifecycleCallbackDescriptor aroundInvokeDesc) {
         String className = aroundInvokeDesc.getLifecycleCallbackClass();
         boolean found = false;
-        for (LifecycleCallbackDescriptor next :
-                getAroundInvokeDescriptors()) {
+        for (LifecycleCallbackDescriptor next
+                : getAroundInvokeDescriptors()) {
             if (next.getLifecycleCallbackClass().equals(className)) {
                 found = true;
                 break;
@@ -690,8 +674,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     public LifecycleCallbackDescriptor getAroundInvokeDescriptorByClass(String className) {
 
-        for (LifecycleCallbackDescriptor next :
-                getAroundInvokeDescriptors()) {
+        for (LifecycleCallbackDescriptor next
+                : getAroundInvokeDescriptors()) {
             if (next.getLifecycleCallbackClass().equals(className)) {
                 return next;
             }
@@ -702,16 +686,16 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     public boolean hasAroundInvokeMethod() {
         return (getAroundInvokeDescriptors().size() > 0);
     }
+
     public Set<LifecycleCallbackDescriptor> getAroundTimeoutDescriptors() {
         return aroundTimeoutDescs;
     }
 
-    public void addAroundTimeoutDescriptor(LifecycleCallbackDescriptor
-            aroundTimeoutDesc) {
+    public void addAroundTimeoutDescriptor(LifecycleCallbackDescriptor aroundTimeoutDesc) {
         String className = aroundTimeoutDesc.getLifecycleCallbackClass();
         boolean found = false;
-        for (LifecycleCallbackDescriptor next :
-                getAroundTimeoutDescriptors()) {
+        for (LifecycleCallbackDescriptor next
+                : getAroundTimeoutDescriptors()) {
             if (next.getLifecycleCallbackClass().equals(className)) {
                 found = true;
                 break;
@@ -723,10 +707,10 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     public LifecycleCallbackDescriptor
-    getAroundTimeoutDescriptorByClass(String className) {
+            getAroundTimeoutDescriptorByClass(String className) {
 
-        for (LifecycleCallbackDescriptor next :
-                getAroundTimeoutDescriptors()) {
+        for (LifecycleCallbackDescriptor next
+                : getAroundTimeoutDescriptors()) {
             if (next.getLifecycleCallbackClass().equals(className)) {
                 return next;
             }
@@ -738,18 +722,17 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         return (getAroundTimeoutDescriptors().size() > 0);
     }
 
-
     @Override
     public void addFrameworkInterceptor(InterceptorDescriptor interceptor) {
         boolean found = false;
-        for(InterceptorDescriptor next : frameworkInterceptors) {
-            if( next.getInterceptorClassName().equals(interceptor.getInterceptorClassName())) {
+        for (InterceptorDescriptor next : frameworkInterceptors) {
+            if (next.getInterceptorClassName().equals(interceptor.getInterceptorClassName())) {
                 found = true;
                 break;
             }
         }
 
-        if( !found ) {
+        if (!found) {
             frameworkInterceptors.add(interceptor);
         }
 
@@ -760,15 +743,15 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Since ejb-class is optional, in some cases the lifecycle-class
-     * for AroundInvoke, PostConstruct, etc. methods on the bean-class
-     * is not known at processing time and must be applied lazily.  As such,
-     * this method should only be called if the ejb-class has been set
-     * on this EjbDescriptor.
+     * Since ejb-class is optional, in some cases the lifecycle-class for
+     * AroundInvoke, PostConstruct, etc. methods on the bean-class is not known
+     * at processing time and must be applied lazily. As such, this method
+     * should only be called if the ejb-class has been set on this
+     * EjbDescriptor.
      */
     public void applyDefaultClassToLifecycleMethods() {
-        Set<LifecycleCallbackDescriptor> lifecycleMethods =
-                getLifecycleCallbackDescriptors();
+        Set<LifecycleCallbackDescriptor> lifecycleMethods
+                = getLifecycleCallbackDescriptors();
         lifecycleMethods.addAll(getAroundInvokeDescriptors());
         lifecycleMethods.addAll(getAroundTimeoutDescriptors());
         for (LifecycleCallbackDescriptor next : lifecycleMethods) {
@@ -779,8 +762,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     public Set<LifecycleCallbackDescriptor> getLifecycleCallbackDescriptors() {
-        Set<LifecycleCallbackDescriptor> lifecycleMethods =
-                new HashSet<LifecycleCallbackDescriptor>();
+        Set<LifecycleCallbackDescriptor> lifecycleMethods
+                = new HashSet<LifecycleCallbackDescriptor>();
         lifecycleMethods.addAll(getPostConstructDescriptors());
         lifecycleMethods.addAll(getPreDestroyDescriptors());
         if (getType().equals(EjbSessionDescriptor.TYPE)) {
@@ -795,8 +778,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     /**
      * Derive all interceptors that are applicable to this bean.
      */
-    public void applyInterceptors(InterceptorBindingTranslator
-            bindingTranslator) {
+    public void applyInterceptors(InterceptorBindingTranslator bindingTranslator) {
 
         // Apply this ejb to the ordered set of all interceptor bindings
         // for this ejb-jar.  The results will contain all interceptor
@@ -822,8 +804,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
                 addEjbReferenceDescriptor((EjbReference) ejbRefObj);
             }
 
-            for (Object msgDestRefObj :
-                    interceptor.getMessageDestinationReferenceDescriptors()) {
+            for (Object msgDestRefObj
+                    : interceptor.getMessageDestinationReferenceDescriptors()) {
                 addMessageDestinationReferenceDescriptor(
                         (MessageDestinationReferenceDescriptor) msgDestRefObj);
             }
@@ -832,31 +814,31 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
                 addOrMergeEnvironmentProperty((EnvironmentProperty) envPropObj);
             }
 
-            for (Object servRefObj :
-                    interceptor.getServiceReferenceDescriptors()) {
+            for (Object servRefObj
+                    : interceptor.getServiceReferenceDescriptors()) {
                 addServiceReferenceDescriptor(
                         (ServiceReferenceDescriptor) servRefObj);
             }
 
-            for (Object resRefObj :
-                    interceptor.getResourceReferenceDescriptors()) {
+            for (Object resRefObj
+                    : interceptor.getResourceReferenceDescriptors()) {
                 addResourceReferenceDescriptor(
                         (ResourceReferenceDescriptor) resRefObj);
             }
 
-            for (Object resourceEnvRefObj :
-                    interceptor.getResourceEnvReferenceDescriptors()) {
+            for (Object resourceEnvRefObj
+                    : interceptor.getResourceEnvReferenceDescriptors()) {
                 addResourceEnvReferenceDescriptor(
                         (ResourceEnvReferenceDescriptor) resourceEnvRefObj);
             }
 
-            for (EntityManagerFactoryReferenceDescriptor entMgrFacRef :
-                    interceptor.getEntityManagerFactoryReferenceDescriptors()) {
+            for (EntityManagerFactoryReferenceDescriptor entMgrFacRef
+                    : interceptor.getEntityManagerFactoryReferenceDescriptors()) {
                 addEntityManagerFactoryReferenceDescriptor(entMgrFacRef);
             }
 
-            for (EntityManagerReferenceDescriptor entMgrRef :
-                    interceptor.getEntityManagerReferenceDescriptors()) {
+            for (EntityManagerReferenceDescriptor entMgrRef
+                    : interceptor.getEntityManagerReferenceDescriptors()) {
                 addEntityManagerReferenceDescriptor(entMgrRef);
             }
         }
@@ -864,17 +846,17 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     public boolean hasInterceptorClass(String interceptorClassName) {
 
-       for(String next : getInterceptorClassNames() ) {
-           if( next.equals(interceptorClassName) ) {
-               return true;
-           }
-       }
+        for (String next : getInterceptorClassNames()) {
+            if (next.equals(interceptorClassName)) {
+                return true;
+            }
+        }
 
-       return false;
+        return false;
     }
 
     public void addInterceptorClass(EjbInterceptor interceptor) {
-        allInterceptorClasses.add(interceptor);    
+        allInterceptorClasses.add(interceptor);
     }
 
     public void appendToInterceptorChain(List<EjbInterceptor> chain) {
@@ -882,10 +864,9 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Return an unordered set of interceptor descriptors for this bean.
-     * This list does not include interceptor info for the bean
-     * class itself, even if the bean class declares AroundInvoke methods
-     * and/or callbacks.
+     * Return an unordered set of interceptor descriptors for this bean. This
+     * list does not include interceptor info for the bean class itself, even if
+     * the bean class declares AroundInvoke methods and/or callbacks.
      */
     public Set<EjbInterceptor> getInterceptorClasses() {
         Set<EjbInterceptor> classes = new HashSet<EjbInterceptor>(allInterceptorClasses);
@@ -893,10 +874,9 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Return an unordered set of the names of all interceptor classes
-     * for this bean.  This list does not include the name of the bean
-     * class itself, even if the bean class declares AroundInvoke methods
-     * and/or callbacks.
+     * Return an unordered set of the names of all interceptor classes for this
+     * bean. This list does not include the name of the bean class itself, even
+     * if the bean class declares AroundInvoke methods and/or callbacks.
      */
     public Set<String> getInterceptorClassNames() {
 
@@ -918,18 +898,18 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Return the ordered list of interceptor info for AroundInvoke behavior
-     * of a particular business method.  This list *does* include the info
-     * on any bean class interceptor.  If present, this would always be the
-     * last element in the list because of the precedence defined by the spec.
+     * Return the ordered list of interceptor info for AroundInvoke behavior of
+     * a particular business method. This list *does* include the info on any
+     * bean class interceptor. If present, this would always be the last element
+     * in the list because of the precedence defined by the spec.
      */
-    public List<EjbInterceptor> getAroundInvokeInterceptors(MethodDescriptor businessMethod) {
+    public List<InterceptorDescriptor> getAroundInvokeInterceptors(MethodDescriptor businessMethod) {
 
-        LinkedList<EjbInterceptor> aroundInvokeInterceptors =
-                new LinkedList<EjbInterceptor>();
+        LinkedList<InterceptorDescriptor> aroundInvokeInterceptors
+                = new LinkedList<InterceptorDescriptor>();
 
-        List<EjbInterceptor> classOrMethodInterceptors = 
-                getClassOrMethodInterceptors(businessMethod);
+        List<EjbInterceptor> classOrMethodInterceptors
+                = getClassOrMethodInterceptors(businessMethod);
 
         for (EjbInterceptor next : classOrMethodInterceptors) {
             if (next.getAroundInvokeDescriptors().size() > 0) {
@@ -951,19 +931,18 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Return the ordered list of interceptor info for AroundTimeout behavior
-     * of a particular business method.  This list *does* include the info
-     * on any bean class interceptor.  If present, this would always be the
-     * last element in the list because of the precedence defined by the spec.
+     * Return the ordered list of interceptor info for AroundTimeout behavior of
+     * a particular business method. This list *does* include the info on any
+     * bean class interceptor. If present, this would always be the last element
+     * in the list because of the precedence defined by the spec.
      */
-    public List<EjbInterceptor> getAroundTimeoutInterceptors
-            (MethodDescriptor businessMethod) {
+    public List<EjbInterceptor> getAroundTimeoutInterceptors(MethodDescriptor businessMethod) {
 
-        LinkedList<EjbInterceptor> aroundTimeoutInterceptors =
-                new LinkedList<EjbInterceptor>();
+        LinkedList<EjbInterceptor> aroundTimeoutInterceptors
+                = new LinkedList<EjbInterceptor>();
 
-        List<EjbInterceptor> classOrMethodInterceptors = 
-                getClassOrMethodInterceptors(businessMethod);
+        List<EjbInterceptor> classOrMethodInterceptors
+                = getClassOrMethodInterceptors(businessMethod);
 
         for (EjbInterceptor next : classOrMethodInterceptors) {
             if (next.getAroundTimeoutDescriptors().size() > 0) {
@@ -986,7 +965,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     public void addMethodLevelChain(List<EjbInterceptor> chain, Method m, boolean aroundInvoke) {
 
-        if( chain.size() == 0 ) {
+        if (chain.size() == 0) {
             return;
         }
 
@@ -1001,15 +980,15 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
             }
         }
 
-        if( existingChain != null ) {
+        if (existingChain != null) {
             existingChain.addAll(chain);
         } else {
             List<EjbInterceptor> newChain = new LinkedList<EjbInterceptor>();
-            for(EjbInterceptor interceptor : interceptorChain) {
-                boolean include = aroundInvoke ?
-                        interceptor.hasAroundInvokeDescriptor() :
-                        interceptor.hasAroundTimeoutDescriptor();
-                if( include ) {
+            for (EjbInterceptor interceptor : interceptorChain) {
+                boolean include = aroundInvoke
+                        ? interceptor.hasAroundInvokeDescriptor()
+                        : interceptor.hasAroundTimeoutDescriptor();
+                if (include) {
                     newChain.add(interceptor);
                 }
             }
@@ -1024,12 +1003,12 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
         for (MethodDescriptor methodDesc : methodInterceptorsMap.keySet()) {
             if (methodDesc.implies(businessMethod)) {
-                classOrMethodInterceptors =
-                        methodInterceptorsMap.get(methodDesc);
+                classOrMethodInterceptors
+                        = methodInterceptorsMap.get(methodDesc);
             }
         }
 
-        if( classOrMethodInterceptors == null ) {
+        if (classOrMethodInterceptors == null) {
             classOrMethodInterceptors = interceptorChain;
         }
 
@@ -1037,10 +1016,10 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Return the ordered list of interceptor info for a particular
-     * callback event type.  This list *does* include the info
-     * on any bean class callback.  If present, this would always be the
-     * last element in the list because of the precedence defined by the spec.
+     * Return the ordered list of interceptor info for a particular callback
+     * event type. This list *does* include the info on any bean class callback.
+     * If present, this would always be the last element in the list because of
+     * the precedence defined by the spec.
      */
     public List<EjbInterceptor> getCallbackInterceptors(CallbackType type) {
 
@@ -1068,28 +1047,28 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
                 callbackDescriptors = ((EjbSessionDescriptor) this).getPostActivateDescriptors();
                 break;
-                
+
             default:
                 throw new IllegalStateException(localStrings.getLocalString(
-                    "enterprise.deployment.invalidcallbacktype",
-                    "Invalid callback type: [{0}]", type));
+                        "enterprise.deployment.invalidcallbacktype",
+                        "Invalid callback type: [{0}]", type));
         }
 
         return getCallbackInterceptors(type, callbackDescriptors);
     }
 
-    /** 
+    /**
      * Common code to add the bean class as a LC interceptor
      */
-    private LinkedList<EjbInterceptor> getCallbackInterceptors(CallbackType type, 
+    private LinkedList<EjbInterceptor> getCallbackInterceptors(CallbackType type,
             Set<LifecycleCallbackDescriptor> callbackDescriptors) {
 
-        LinkedList<EjbInterceptor> callbackInterceptors = 
-                new LinkedList<EjbInterceptor>();
+        LinkedList<EjbInterceptor> callbackInterceptors
+                = new LinkedList<EjbInterceptor>();
 
         ClassLoader classLoader = getEjbBundleDescriptor().getClassLoader();
-        List<EjbInterceptor> classOrMethodInterceptors = (type.equals(CallbackType.AROUND_CONSTRUCT))?
-                getConstructorInterceptors(classLoader) : interceptorChain;
+        List<EjbInterceptor> classOrMethodInterceptors = (type.equals(CallbackType.AROUND_CONSTRUCT))
+                ? getConstructorInterceptors(classLoader) : interceptorChain;
 
         for (EjbInterceptor next : classOrMethodInterceptors) {
             if (next.getCallbackDescriptors(type).size() > 0) {
@@ -1120,7 +1099,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
             shortClassName = ejbClassName.substring(i + 1);
         }
 
-        JCDIService jcdiService = (sl == null)? null : sl.getService(JCDIService.class);
+        JCDIService jcdiService = (sl == null) ? null : sl.getService(JCDIService.class);
         if (jcdiService != null && jcdiService.isJCDIEnabled(getEjbBundleDescriptor())) {
             try {
                 Class beanClass = classLoader.loadClass(getEjbClassName());
@@ -1128,14 +1107,14 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
                 String[] parameterClassNames = null;
                 MethodDescriptor dummy = new MethodDescriptor();
-                for(Constructor<?> ctor : ctors) {
+                for (Constructor<?> ctor : ctors) {
                     if (ctor.getAnnotation(Inject.class) != null) {
                         // @Inject constructor
                         Class[] ctorParamTypes = ctor.getParameterTypes();
                         parameterClassNames = dummy.getParameterClassNamesFor(null, ctorParamTypes);
                         callbackInterceptors = getClassOrMethodInterceptors(
                                 new MethodDescriptor(shortClassName, null,
-                                              parameterClassNames, MethodDescriptor.EJB_BEAN));
+                                        parameterClassNames, MethodDescriptor.EJB_BEAN));
                         break;
                     }
                 }
@@ -1143,7 +1122,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
                 _logger.log(Level.SEVERE, "enterprise.deployment.backend.methodClassLoadFailure", new Object[]{this.getEjbClassName()});
                 throw new RuntimeException(t);
             }
-        } 
+        }
         if (callbackInterceptors == null) {
             // non-CDI or no @Inject constructor - use no-arg constructor
             callbackInterceptors = getClassOrMethodInterceptors(
@@ -1169,7 +1148,6 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         isDistributedTxScope = scope;
     }
 
-
     /**
      * Set the usesCallerIdentity flag
      */
@@ -1180,20 +1158,20 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     /**
      * Get the usesCallerIdentity flag
      *
-     * @return Boolean.TRUE if this bean uses caller identity
-     *         null if this is called before validator visit
+     * @return Boolean.TRUE if this bean uses caller identity null if this is
+     * called before validator visit
      */
     public Boolean getUsesCallerIdentity() {
         return usesCallerIdentity;
     }
 
-
     /**
      * Get the description field of security-identity
      */
     public String getSecurityIdentityDescription() {
-        if (securityIdentityDescription == null)
+        if (securityIdentityDescription == null) {
             securityIdentityDescription = "";
+        }
         return securityIdentityDescription;
     }
 
@@ -1204,20 +1182,21 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         securityIdentityDescription = s;
     }
 
-
     public void setRunAsIdentity(RunAsIdentityDescriptor desc) {
-        if (usesCallerIdentity == null || usesCallerIdentity)
+        if (usesCallerIdentity == null || usesCallerIdentity) {
             throw new IllegalStateException(localStrings.getLocalString(
                     "exceptioncannotsetrunas",
                     "Cannot set RunAs identity when using caller identity"));
+        }
         this.runAsIdentity = desc;
     }
 
     public RunAsIdentityDescriptor getRunAsIdentity() {
-        if (usesCallerIdentity == null || usesCallerIdentity)
+        if (usesCallerIdentity == null || usesCallerIdentity) {
             throw new IllegalStateException(localStrings.getLocalString(
                     "exceptioncannotgetrunas",
                     "Cannot get RunAs identity when using caller identity"));
+        }
         return runAsIdentity;
     }
 
@@ -1229,15 +1208,16 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * @return a state to indicate whether default method transaction is used
-     *         if isBoundsChecking is on.
+     * @return a state to indicate whether default method transaction is used if
+     * isBoundsChecking is on.
      */
     public boolean isUsesDefaultTransaction() {
         return usesDefaultTransaction;
     }
 
     /**
-     * Return a copy of the mapping held internally of method descriptors to container transaction objects.
+     * Return a copy of the mapping held internally of method descriptors to
+     * container transaction objects.
      */
     public Hashtable getMethodContainerTransactions() {
         if (this.methodContainerTransactions == null) {
@@ -1247,8 +1227,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Sets the container transaction for the given method descriptor.
-     * Throws an Illegal argument if this ejb has transaction type BEAN_TRANSACTION_TYPE.
+     * Sets the container transaction for the given method descriptor. Throws an
+     * Illegal argument if this ejb has transaction type BEAN_TRANSACTION_TYPE.
      */
     public void setContainerTransactionFor(MethodDescriptor methodDescriptor, ContainerTransaction containerTransaction) {
         ContainerTransaction oldValue = this.getContainerTransactionFor(methodDescriptor);
@@ -1267,16 +1247,17 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Sets the container transactions for all the method descriptors of this ejb. The Hashtable is keyed
-     * by method descriptor and the values are the corresponding container transaction objects..
-     * Throws an Illegal argument if this ejb has transaction type BEAN_TRANSACTION_TYPE.
+     * Sets the container transactions for all the method descriptors of this
+     * ejb. The Hashtable is keyed by method descriptor and the values are the
+     * corresponding container transaction objects.. Throws an Illegal argument
+     * if this ejb has transaction type BEAN_TRANSACTION_TYPE.
      */
     public void setMethodContainerTransactions(Hashtable methodContainerTransactions) {
         if (methodContainerTransactions != null) {
             for (Enumeration e = methodContainerTransactions.keys(); e.hasMoreElements();) {
                 MethodDescriptor methodDescriptor = (MethodDescriptor) e.nextElement();
-                ContainerTransaction containerTransaction =
-                        (ContainerTransaction) methodContainerTransactions.get(methodDescriptor);
+                ContainerTransaction containerTransaction
+                        = (ContainerTransaction) methodContainerTransactions.get(methodDescriptor);
                 setContainerTransactionFor(methodDescriptor, containerTransaction);
             }
         }
@@ -1297,9 +1278,9 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         return allMethodDescriptors;
     }
 
-
     /**
-     * Fetches the assigned container transaction object for the given method object or null.
+     * Fetches the assigned container transaction object for the given method
+     * object or null.
      */
     public ContainerTransaction getContainerTransactionFor(MethodDescriptor methodDescriptor) {
         ContainerTransaction containerTransaction = null;
@@ -1330,7 +1311,6 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         return false;
     }
 
-
     private void convertMethodContainerTransactions() {
         // container transactions first
         //Hashtable transactions = this.getMethodContainerTransactions();
@@ -1351,8 +1331,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
             MethodDescriptor md = (MethodDescriptor) e.nextElement();
             if (md.getStyle() == requestedStyleForConversion) {
                 ContainerTransaction ct = (ContainerTransaction) getMethodContainerTransactions().get(md);
-                for (Enumeration mds = md.doStyleConversion(this, transactionMethods).elements(); mds.hasMoreElements();)
-                {
+                for (Enumeration mds = md.doStyleConversion(this, transactionMethods).elements(); mds.hasMoreElements();) {
                     MethodDescriptor next = (MethodDescriptor) mds.nextElement();
                     convertedMethods.put(next, new ContainerTransaction(ct));
                 }
@@ -1361,8 +1340,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * returns a ContainerTransaction if all the transactional methods on
-     * the ejb descriptor have the same transaction type else return null
+     * returns a ContainerTransaction if all the transactional methods on the
+     * ejb descriptor have the same transaction type else return null
      */
     public ContainerTransaction getContainerTransaction() {
         Vector transactionalMethods = new Vector(this.getTransactionMethodDescriptors());
@@ -1409,7 +1388,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     /**
      * @return the Map of MethodPermission (keys) that have been assigned to
-     *         MethodDescriptors (elements)
+     * MethodDescriptors (elements)
      */
     public Map getPermissionedMethodsByPermission() {
         if (permissionedMethodsByPermission == null) {
@@ -1436,8 +1415,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
                 // will be implicitly defined when not listed as a security-role
                 if (!"**".equals(mp.getRole().getName())) {
                     throw new IllegalArgumentException(localStrings.getLocalString(
-                        "enterprise.deployment.exceptioncannotaddrolesbundle",
-                        "Cannot add roles when the bundle does not have them"));
+                            "enterprise.deployment.exceptioncannotaddrolesbundle",
+                            "Cannot add roles when the bundle does not have them"));
                 }
             }
         }
@@ -1452,10 +1431,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Keep a record of all the Method Permissions exactly as they were in the DD
+     * Keep a record of all the Method Permissions exactly as they were in the
+     * DD
      */
     private void saveMethodPermissionFromDD(MethodPermission mp,
-                                            MethodDescriptor md) {
+            MethodDescriptor md) {
 
         if (methodPermissionsFromDD == null) {
             methodPermissionsFromDD = new HashMap();
@@ -1466,8 +1446,9 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         // Equality once did not take into account differences in
         // method interface, and will process sequentially.
         ArrayList descriptors = (ArrayList) methodPermissionsFromDD.get(mp);
-        if (descriptors == null)
+        if (descriptors == null) {
             descriptors = new ArrayList();
+        }
         descriptors.add(md);
         methodPermissionsFromDD.put(mp, descriptors);
     }
@@ -1532,8 +1513,9 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
         // we organize per method descriptors, makes it easier...
         Set permissions = (Set) styledMethodDescriptors.get(md);
-        if (permissions == null)
+        if (permissions == null) {
             permissions = new HashSet();
+        }
         permissions.add(mp);
         styledMethodDescriptors.put(md, permissions);
     }
@@ -1547,7 +1529,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         }
 
         // the current info is structured as MethodDescriptors as keys to
-        // method permission, let's reverse this to make the Map using the 
+        // method permission, let's reverse this to make the Map using the
         // method permission as a key.
         Map styledMethodDescriptorsByPermission = new HashMap();
         for (Iterator mdIterator = styledMethodDescriptors.keySet().iterator(); mdIterator.hasNext();) {
@@ -1568,8 +1550,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * @return a Set of method descriptors for all the methods associated
-     *         with an unchecked method permission
+     * @return a Set of method descriptors for all the methods associated with
+     * an unchecked method permission
      */
     public Set getUncheckedMethodDescriptors() {
         if (needToConvertMethodPermissions()) {
@@ -1579,8 +1561,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * @return a Set of method descriptors for all the methoda assoicated
-     *         with an excluded method permission
+     * @return a Set of method descriptors for all the methoda assoicated with
+     * an excluded method permission
      */
     public Set getExcludedMethodDescriptors() {
         if (needToConvertMethodPermissions()) {
@@ -1590,13 +1572,14 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * convert all style 1 and style 2 method descriptors contained in
-     * our tables into style 3 method descriptors.
+     * convert all style 1 and style 2 method descriptors contained in our
+     * tables into style 3 method descriptors.
      */
     private void convertMethodPermissions() {
 
-        if (styledMethodDescriptors == null)
+        if (styledMethodDescriptors == null) {
             return;
+        }
 
         Set allMethods = getMethodDescriptors();
         Set unpermissionedMethods = getMethodDescriptors();
@@ -1615,7 +1598,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
                 MethodDescriptor md = (MethodDescriptor) mdItr.next();
 
                 // remove it from the list of unpermissioned methods.
-                // it will be used at the end to set all remaining methods 
+                // it will be used at the end to set all remaining methods
                 // with the unchecked method permission
                 unpermissionedMethods.remove(md);
 
@@ -1628,7 +1611,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
             }
         }
 
-        // All remaining methods should now be defined as unchecked...        
+        // All remaining methods should now be defined as unchecked...
         MethodPermission mp = MethodPermission.getUncheckedMethodPermission();
         Iterator iterator = unpermissionedMethods.iterator();
         while (iterator.hasNext()) {
@@ -1643,12 +1626,14 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Update a method descriptor set of method permission with a new method permission
-     * The new method permission is added to the list of existing method permissions
-     * given it respect the EJB 2.0 paragraph 21.3.2 on priorities of method permissions
+     * Update a method descriptor set of method permission with a new method
+     * permission The new method permission is added to the list of existing
+     * method permissions given it respect the EJB 2.0 paragraph 21.3.2 on
+     * priorities of method permissions
      *
      * @param mp is the method permission to be added
-     * @param md is the method descriptor (style3 only) to add the method permission to
+     * @param md is the method descriptor (style3 only) to add the method
+     * permission to
      */
     private void updateMethodPermissionForMethod(MethodPermission mp, MethodDescriptor md) {
 
@@ -1666,7 +1651,6 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         // excluded method permission is always used when multiple methos permission are present
         // unchecked is considered like a role based method permission and is added to the list
         // therefore making the method callable by anyone.
-
         if (mp.isExcluded()) {
             // Excluded methods takes precedence on any other form of method permission
             // remove all existing method permission...
@@ -1676,28 +1660,26 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
             }
             // add the excluded
             addMethodPermissionForMethod(mp, md);
-        } else {
-            if (mp.isUnchecked()) {
-                // we are trying to add an unchecked method permisison, all role-based
-                // method permission should be removed since unchecked is now used, if a
-                // particular method has an excluded method permision, we do not add it
-                for (Iterator oldPermissionsItr = oldPermissions.iterator(); oldPermissionsItr.hasNext();) {
-                    MethodPermission oldMp = (MethodPermission) oldPermissionsItr.next();
-                    if (!oldMp.isExcluded()) {
-                        removePermissionedMethod(oldMp, md);
-                        addMethodPermissionForMethod(mp, md);
-                    }
+        } else if (mp.isUnchecked()) {
+            // we are trying to add an unchecked method permisison, all role-based
+            // method permission should be removed since unchecked is now used, if a
+            // particular method has an excluded method permision, we do not add it
+            for (Iterator oldPermissionsItr = oldPermissions.iterator(); oldPermissionsItr.hasNext();) {
+                MethodPermission oldMp = (MethodPermission) oldPermissionsItr.next();
+                if (!oldMp.isExcluded()) {
+                    removePermissionedMethod(oldMp, md);
+                    addMethodPermissionForMethod(mp, md);
                 }
-            } else {
-                // we are trying to add a role based method permission. Check that
-                // unchecked or excluded method permissions have not been set
-                // and add it to the current list of role based permission
-                for (Iterator oldPermissionsItr = oldPermissions.iterator(); oldPermissionsItr.hasNext();) {
-                    MethodPermission oldMp = (MethodPermission) oldPermissionsItr.next();
-                    if (!oldMp.isExcluded()) {
-                        if (!oldMp.isUnchecked()) {
-                            addMethodPermissionForMethod(mp, md);
-                        }
+            }
+        } else {
+            // we are trying to add a role based method permission. Check that
+            // unchecked or excluded method permissions have not been set
+            // and add it to the current list of role based permission
+            for (Iterator oldPermissionsItr = oldPermissions.iterator(); oldPermissionsItr.hasNext();) {
+                MethodPermission oldMp = (MethodPermission) oldPermissionsItr.next();
+                if (!oldMp.isExcluded()) {
+                    if (!oldMp.isUnchecked()) {
+                        addMethodPermissionForMethod(mp, md);
                     }
                 }
             }
@@ -1738,18 +1720,17 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         return methodPermissionsForMethod;
     }
 
-
     // BEGIN WritableJndiNameEnvironment methods
-
     /**
      * Return the set of ejb references this ejb declares.
      */
     @Override
     public final Set<EjbReference> getEjbReferenceDescriptors() {
-        if (env != null)
+        if (env != null) {
             return env.getEjbReferenceDescriptors();
-        else
+        } else {
             return ejbReferences;
+        }
     }
 
     /**
@@ -1759,24 +1740,26 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     public final void addEjbReferenceDescriptor(EjbReference ejbReference) {
         try {
             EjbReference existing = getEjbReference(ejbReference.getName());
-            for(InjectionTarget next : ejbReference.getInjectionTargets() ) {
+            for (InjectionTarget next : ejbReference.getInjectionTargets()) {
                 existing.addInjectionTarget(next);
             }
-        } catch(IllegalArgumentException e) {
-            if (env != null)
+        } catch (IllegalArgumentException e) {
+            if (env != null) {
                 env.addEjbReferenceDescriptor(ejbReference);
-            else
+            } else {
                 ejbReferences.add(ejbReference);
+            }
             ejbReference.setReferringBundleDescriptor(getEjbBundleDescriptor());
         }
     }
 
     @Override
     public final void removeEjbReferenceDescriptor(EjbReference ejbReference) {
-        if (env != null)
+        if (env != null) {
             env.removeEjbReferenceDescriptor(ejbReference);
-        else
+        } else {
             ejbReferences.remove(ejbReference);
+        }
         ejbReference.setReferringBundleDescriptor(null);
     }
 
@@ -1786,12 +1769,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     @Override
-    public final void addPostConstructDescriptor(LifecycleCallbackDescriptor
-            postConstructDesc) {
+    public final void addPostConstructDescriptor(LifecycleCallbackDescriptor postConstructDesc) {
         String className = postConstructDesc.getLifecycleCallbackClass();
         boolean found = false;
-        for (LifecycleCallbackDescriptor next :
-                getPostConstructDescriptors()) {
+        for (LifecycleCallbackDescriptor next
+                : getPostConstructDescriptors()) {
             if (next.getLifecycleCallbackClass().equals(className)) {
                 found = true;
                 break;
@@ -1806,7 +1788,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     public final LifecycleCallbackDescriptor
             getPostConstructDescriptorByClass(String className) {
         return bundleDescriptor.
-                            getPostConstructDescriptorByClass(className, this);
+                getPostConstructDescriptorByClass(className, this);
     }
 
     @Override
@@ -1815,12 +1797,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     @Override
-    public final void addPreDestroyDescriptor(LifecycleCallbackDescriptor
-            preDestroyDesc) {
+    public final void addPreDestroyDescriptor(LifecycleCallbackDescriptor preDestroyDesc) {
         String className = preDestroyDesc.getLifecycleCallbackClass();
         boolean found = false;
-        for (LifecycleCallbackDescriptor next :
-                getPreDestroyDescriptors()) {
+        for (LifecycleCallbackDescriptor next
+                : getPreDestroyDescriptors()) {
             if (next.getLifecycleCallbackClass().equals(className)) {
                 found = true;
                 break;
@@ -1835,56 +1816,59 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     public final LifecycleCallbackDescriptor
             getPreDestroyDescriptorByClass(String className) {
         return bundleDescriptor.
-                                getPreDestroyDescriptorByClass(className, this);
+                getPreDestroyDescriptorByClass(className, this);
     }
 
     @Override
     public final Set<ServiceReferenceDescriptor> getServiceReferenceDescriptors() {
-        if (env != null)
+        if (env != null) {
             return env.getServiceReferenceDescriptors();
-        else
+        } else {
             return serviceReferences;
+        }
     }
 
     public final void addServiceReferenceDescriptor(
-                                    ServiceReferenceDescriptor serviceRef) {
+            ServiceReferenceDescriptor serviceRef) {
         try {
-            ServiceReferenceDescriptor existing =
-                    this.getServiceReferenceByName(serviceRef.getName());
-            for(InjectionTarget next : serviceRef.getInjectionTargets()) {
+            ServiceReferenceDescriptor existing
+                    = this.getServiceReferenceByName(serviceRef.getName());
+            for (InjectionTarget next : serviceRef.getInjectionTargets()) {
                 existing.addInjectionTarget(next);
             }
 
-        } catch(IllegalArgumentException e) {
-            if (env != null)
+        } catch (IllegalArgumentException e) {
+            if (env != null) {
                 env.addServiceReferenceDescriptor(serviceRef);
-            else
+            } else {
                 serviceReferences.add(serviceRef);
+            }
             serviceRef.setBundleDescriptor(getEjbBundleDescriptor());
         }
     }
 
     @Override
     public final void removeServiceReferenceDescriptor(
-                                    ServiceReferenceDescriptor serviceRef) {
-        if (env != null)
+            ServiceReferenceDescriptor serviceRef) {
+        if (env != null) {
             env.removeServiceReferenceDescriptor(serviceRef);
-        else
+        } else {
             serviceReferences.remove(serviceRef);
+        }
     }
 
     /**
-     * Looks up an service reference with the given name.
-     * Throws an IllegalArgumentException if it is not found.
+     * Looks up an service reference with the given name. Throws an
+     * IllegalArgumentException if it is not found.
      */
     @Override
     public final ServiceReferenceDescriptor getServiceReferenceByName(String name) {
-        if (env != null)
+        if (env != null) {
             return env.getServiceReferenceByName(name);
+        }
         for (Iterator itr = this.getServiceReferenceDescriptors().iterator();
-             itr.hasNext();) {
-            ServiceReferenceDescriptor srd = (ServiceReferenceDescriptor)
-                    itr.next();
+                itr.hasNext();) {
+            ServiceReferenceDescriptor srd = (ServiceReferenceDescriptor) itr.next();
             if (srd.getName().equals(name)) {
                 return srd;
             }
@@ -1898,54 +1882,58 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     @Override
     public final Set<MessageDestinationReferenceDescriptor>
             getMessageDestinationReferenceDescriptors() {
-        if (env != null)
+        if (env != null) {
             return env.getMessageDestinationReferenceDescriptors();
-        else
+        } else {
             return messageDestReferences;
+        }
     }
 
     @Override
     public final void addMessageDestinationReferenceDescriptor(
-                        MessageDestinationReferenceDescriptor messageDestRef) {
+            MessageDestinationReferenceDescriptor messageDestRef) {
 
         try {
-            MessageDestinationReferenceDescriptor existing =
-                    getMessageDestinationReferenceByName(
-                                                    messageDestRef.getName());
-            for(InjectionTarget next : messageDestRef.getInjectionTargets()) {
+            MessageDestinationReferenceDescriptor existing
+                    = getMessageDestinationReferenceByName(
+                            messageDestRef.getName());
+            for (InjectionTarget next : messageDestRef.getInjectionTargets()) {
                 existing.addInjectionTarget(next);
             }
-        } catch(IllegalArgumentException e) {
-            if (env != null)
+        } catch (IllegalArgumentException e) {
+            if (env != null) {
                 env.addMessageDestinationReferenceDescriptor(messageDestRef);
-            else
+            } else {
                 messageDestReferences.add(messageDestRef);
+            }
             if (getEjbBundleDescriptor() != null) {
                 messageDestRef.setReferringBundleDescriptor(
-                                                    getEjbBundleDescriptor());
+                        getEjbBundleDescriptor());
             }
         }
     }
 
     @Override
     public final void removeMessageDestinationReferenceDescriptor(
-                            MessageDestinationReferenceDescriptor msgDestRef) {
-        if (env != null)
+            MessageDestinationReferenceDescriptor msgDestRef) {
+        if (env != null) {
             env.removeMessageDestinationReferenceDescriptor(msgDestRef);
-        else
+        } else {
             messageDestReferences.remove(msgDestRef);
+        }
     }
 
     /**
-     * Looks up an message destination reference with the given name.
-     * Throws an IllegalArgumentException if it is not found.
+     * Looks up an message destination reference with the given name. Throws an
+     * IllegalArgumentException if it is not found.
      */
     @Override
     public final MessageDestinationReferenceDescriptor
             getMessageDestinationReferenceByName(String name) {
 
-        if (env != null)
+        if (env != null) {
             return env.getMessageDestinationReferenceByName(name);
+        }
         for (MessageDestinationReferenceDescriptor mdr : messageDestReferences) {
             if (mdr.getName().equals(name)) {
                 return mdr;
@@ -1959,10 +1947,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     @Override
     public final Set<ResourceDescriptor> getResourceDescriptors(JavaEEResourceType type) {
-        if (env != null)
+        if (env != null) {
             return env.getResourceDescriptors(type);
-        else
+        } else {
             return super.getResourceDescriptors(type);
+        }
     }
 
     @Override
@@ -1985,15 +1974,17 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     @Override
     public final Set<ResourceDescriptor> getAllResourcesDescriptors() {
-        if (env != null)
+        if (env != null) {
             return env.getAllResourcesDescriptors();
+        }
         return super.getAllResourcesDescriptors();
     }
 
     @Override
     public final Set<ResourceDescriptor> getAllResourcesDescriptors(Class givenClazz) {
-        if (env != null)
+        if (env != null) {
             return env.getAllResourcesDescriptors(givenClazz);
+        }
         return super.getAllResourcesDescriptors(givenClazz);
     }
 
@@ -2003,47 +1994,50 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     @Override
     public final Set<ResourceEnvReferenceDescriptor>
             getResourceEnvReferenceDescriptors() {
-        if (env != null)
+        if (env != null) {
             return env.getResourceEnvReferenceDescriptors();
-        else
+        } else {
             return resourceEnvReferences;
+        }
     }
 
     @Override
     public final void addResourceEnvReferenceDescriptor(
-                        ResourceEnvReferenceDescriptor resourceEnvReference) {
+            ResourceEnvReferenceDescriptor resourceEnvReference) {
 
         try {
-            ResourceEnvReferenceDescriptor existing =
-                getResourceEnvReferenceByName(resourceEnvReference.getName());
+            ResourceEnvReferenceDescriptor existing
+                    = getResourceEnvReferenceByName(resourceEnvReference.getName());
             for (InjectionTarget next : resourceEnvReference.getInjectionTargets()) {
                 existing.addInjectionTarget(next);
             }
-        } catch(IllegalArgumentException e) {
-            if (env != null)
+        } catch (IllegalArgumentException e) {
+            if (env != null) {
                 env.addResourceEnvReferenceDescriptor(resourceEnvReference);
-            else
+            } else {
                 resourceEnvReferences.add(resourceEnvReference);
+            }
         }
 
     }
 
     @Override
     public final void removeResourceEnvReferenceDescriptor(
-                        ResourceEnvReferenceDescriptor resourceEnvReference) {
-        if (env != null)
+            ResourceEnvReferenceDescriptor resourceEnvReference) {
+        if (env != null) {
             env.removeResourceEnvReferenceDescriptor(resourceEnvReference);
-        else
+        } else {
             resourceEnvReferences.remove(resourceEnvReference);
+        }
     }
 
     @Override
     public final ResourceEnvReferenceDescriptor getResourceEnvReferenceByName(
-                                                                String name) {
+            String name) {
         for (Iterator itr = getResourceEnvReferenceDescriptors().iterator();
                 itr.hasNext();) {
-            ResourceEnvReferenceDescriptor jdr =
-                (ResourceEnvReferenceDescriptor) itr.next();
+            ResourceEnvReferenceDescriptor jdr
+                    = (ResourceEnvReferenceDescriptor) itr.next();
             if (jdr.getName().equals(name)) {
                 return jdr;
             }
@@ -2051,7 +2045,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         throw new IllegalArgumentException(localStrings.getLocalString(
                 "enterprise.deployment.exceptionbeanhasnoresourceenvrefbyname",
                 "This bean {0} has no resource environment reference by the name of {1}",
-                new Object[] {getName(), name}));
+                new Object[]{getName(), name}));
     }
 
     /**
@@ -2059,10 +2053,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      */
     @Override
     public final Set<ResourceReferenceDescriptor> getResourceReferenceDescriptors() {
-        if (env != null)
+        if (env != null) {
             return env.getResourceReferenceDescriptors();
-        else
+        } else {
             return resourceReferences;
+        }
     }
 
     /**
@@ -2070,20 +2065,21 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      */
     @Override
     public final void addResourceReferenceDescriptor(
-                            ResourceReferenceDescriptor resourceReference) {
+            ResourceReferenceDescriptor resourceReference) {
 
         try {
-            ResourceReferenceDescriptor existing =
-                getResourceReferenceByName(resourceReference.getName());
-            for(InjectionTarget next : resourceReference.getInjectionTargets() ) {
+            ResourceReferenceDescriptor existing
+                    = getResourceReferenceByName(resourceReference.getName());
+            for (InjectionTarget next : resourceReference.getInjectionTargets()) {
                 existing.addInjectionTarget(next);
             }
 
-        } catch(IllegalArgumentException e) {
-            if (env != null)
+        } catch (IllegalArgumentException e) {
+            if (env != null) {
                 env.addResourceReferenceDescriptor(resourceReference);
-            else
+            } else {
                 resourceReferences.add(resourceReference);
+            }
         }
     }
 
@@ -2092,11 +2088,12 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      */
     @Override
     public final void removeResourceReferenceDescriptor(
-                            ResourceReferenceDescriptor resourceReference) {
-        if (env != null)
+            ResourceReferenceDescriptor resourceReference) {
+        if (env != null) {
             env.removeResourceReferenceDescriptor(resourceReference);
-        else
+        } else {
             resourceReferences.remove(resourceReference);
+        }
     }
 
     /**
@@ -2106,8 +2103,9 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      */
     @Override
     public final EnvironmentProperty getEnvironmentPropertyByName(String name) {
-        if (env != null)
+        if (env != null) {
             return env.getEnvironmentPropertyByName(name);
+        }
         for (Iterator itr = this.getEnvironmentProperties().iterator(); itr.hasNext();) {
             EnvironmentProperty ev = (EnvironmentProperty) itr.next();
             if (ev.getName().equals(name)) {
@@ -2125,10 +2123,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      */
     @Override
     public final Set<EnvironmentProperty> getEnvironmentProperties() {
-        if (env != null)
+        if (env != null) {
             return env.getEnvironmentProperties();
-        else
+        } else {
             return environmentProperties;
+        }
     }
 
     /**
@@ -2136,7 +2135,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      */
     @Override
     public final void addEnvironmentProperty(
-                                    EnvironmentProperty environmentProperty) {
+            EnvironmentProperty environmentProperty) {
         if (env != null) {
             env.addEnvironmentProperty(environmentProperty);
             return;
@@ -2155,20 +2154,22 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      */
     @Override
     public final void removeEnvironmentProperty(
-                                EnvironmentProperty environmentProperty) {
-        if (env != null)
+            EnvironmentProperty environmentProperty) {
+        if (env != null) {
             env.removeEnvironmentProperty(environmentProperty);
-        else
+        } else {
             this.getEnvironmentProperties().remove(environmentProperty);
+        }
     }
 
     @Override
     public final Set<EntityManagerFactoryReferenceDescriptor>
             getEntityManagerFactoryReferenceDescriptors() {
-        if (env != null)
+        if (env != null) {
             return env.getEntityManagerFactoryReferenceDescriptors();
-        else
+        } else {
             return entityManagerFactoryReferences;
+        }
     }
 
     /**
@@ -2178,10 +2179,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     @Override
     public final EntityManagerFactoryReferenceDescriptor
             getEntityManagerFactoryReferenceByName(String name) {
-        if (env != null)
+        if (env != null) {
             return env.getEntityManagerFactoryReferenceByName(name);
-        for (EntityManagerFactoryReferenceDescriptor next :
-                getEntityManagerFactoryReferenceDescriptors()) {
+        }
+        for (EntityManagerFactoryReferenceDescriptor next
+                : getEntityManagerFactoryReferenceDescriptors()) {
 
             if (next.getName().equals(name)) {
                 return next;
@@ -2195,33 +2197,34 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
     @Override
     public final void addEntityManagerFactoryReferenceDescriptor(
-                        EntityManagerFactoryReferenceDescriptor reference) {
+            EntityManagerFactoryReferenceDescriptor reference) {
 
         try {
-            EntityManagerFactoryReferenceDescriptor existing =
-                    getEntityManagerFactoryReferenceByName(reference.getName());
-            for( InjectionTarget next : reference.getInjectionTargets() ) {
+            EntityManagerFactoryReferenceDescriptor existing
+                    = getEntityManagerFactoryReferenceByName(reference.getName());
+            for (InjectionTarget next : reference.getInjectionTargets()) {
                 existing.addInjectionTarget(next);
             }
         } catch (IllegalArgumentException e) {
             if (getEjbBundleDescriptor() != null) {
-                reference.setReferringBundleDescriptor
-                        (getEjbBundleDescriptor());
+                reference.setReferringBundleDescriptor(getEjbBundleDescriptor());
             }
-            if (env != null)
+            if (env != null) {
                 env.addEntityManagerFactoryReferenceDescriptor(reference);
-            else
+            } else {
                 entityManagerFactoryReferences.add(reference);
+            }
         }
     }
 
     @Override
     public final Set<EntityManagerReferenceDescriptor>
             getEntityManagerReferenceDescriptors() {
-        if (env != null)
+        if (env != null) {
             return env.getEntityManagerReferenceDescriptors();
-        else
+        } else {
             return entityManagerReferences;
+        }
     }
 
     /**
@@ -2230,11 +2233,12 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
      */
     @Override
     public final EntityManagerReferenceDescriptor getEntityManagerReferenceByName(
-                                                                String name) {
-        if (env != null)
+            String name) {
+        if (env != null) {
             return env.getEntityManagerReferenceByName(name);
-        for (EntityManagerReferenceDescriptor next :
-                getEntityManagerReferenceDescriptors()) {
+        }
+        for (EntityManagerReferenceDescriptor next
+                : getEntityManagerReferenceDescriptors()) {
 
             if (next.getName().equals(name)) {
                 return next;
@@ -2247,24 +2251,23 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     @Override
-    public final void addEntityManagerReferenceDescriptor
-            (EntityManagerReferenceDescriptor reference) {
+    public final void addEntityManagerReferenceDescriptor(EntityManagerReferenceDescriptor reference) {
 
         try {
-            EntityManagerReferenceDescriptor existing =
-                    this.getEntityManagerReferenceByName(reference.getName());
-            for( InjectionTarget next : reference.getInjectionTargets() ) {
+            EntityManagerReferenceDescriptor existing
+                    = this.getEntityManagerReferenceByName(reference.getName());
+            for (InjectionTarget next : reference.getInjectionTargets()) {
                 existing.addInjectionTarget(next);
             }
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             if (getEjbBundleDescriptor() != null) {
-                reference.setReferringBundleDescriptor
-                    (getEjbBundleDescriptor());
+                reference.setReferringBundleDescriptor(getEjbBundleDescriptor());
             }
-            if (env != null)
+            if (env != null) {
                 env.addEntityManagerReferenceDescriptor(reference);
-            else
+            } else {
                 getEntityManagerReferenceDescriptors().add(reference);
+            }
         }
 
     }
@@ -2272,25 +2275,25 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     @Override
     public final List<InjectionCapable>
             getInjectableResourcesByClass(String className) {
-        if (env != null)
+        if (env != null) {
             return env.getInjectableResourcesByClass(className);
-        else
+        } else {
             return bundleDescriptor.
-                            getInjectableResourcesByClass(className, this);
+                    getInjectableResourcesByClass(className, this);
+        }
     }
 
     @Override
     public final InjectionInfo getInjectionInfoByClass(Class clazz) {
-        if (env != null)
+        if (env != null) {
             return env.getInjectionInfoByClass(clazz);
-        else
+        } else {
             return bundleDescriptor.getInjectionInfoByClass(clazz, this);
+        }
     }
 
     // END WritableJndiNameEnvirnoment methods
-
     // BEGIN methods closely related to WritableJndiNameEnvironment
-
     public boolean hasPostConstructMethod() {
         return (getPostConstructDescriptors().size() > 0);
     }
@@ -2300,17 +2303,17 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Return the set of resource references this ejb declares that
-     * have been resolved.
+     * Return the set of resource references this ejb declares that have been
+     * resolved.
      */
     public Set<ResourceReferenceDescriptor>
             getResourceReferenceDescriptors(boolean resolved) {
-        Set<ResourceReferenceDescriptor> toReturn =
-            new HashSet<ResourceReferenceDescriptor>();
+        Set<ResourceReferenceDescriptor> toReturn
+                = new HashSet<ResourceReferenceDescriptor>();
         for (Iterator itr = getResourceReferenceDescriptors().iterator();
                 itr.hasNext();) {
-            ResourceReferenceDescriptor next =
-                (ResourceReferenceDescriptor) itr.next();
+            ResourceReferenceDescriptor next
+                    = (ResourceReferenceDescriptor) itr.next();
             if (next.isResolved() == resolved) {
                 toReturn.add(next);
             }
@@ -2319,15 +2322,15 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Return the resource object corresponding to the supplied name or
-     * throw an illegal argument exception.
+     * Return the resource object corresponding to the supplied name or throw an
+     * illegal argument exception.
      */
     @Override   // ResourceReferenceContainer
     public ResourceReferenceDescriptor getResourceReferenceByName(String name) {
         for (Iterator itr = getResourceReferenceDescriptors().iterator();
                 itr.hasNext();) {
-            ResourceReferenceDescriptor next =
-                (ResourceReferenceDescriptor) itr.next();
+            ResourceReferenceDescriptor next
+                    = (ResourceReferenceDescriptor) itr.next();
             if (next.getName().equals(name)) {
                 return next;
             }
@@ -2348,8 +2351,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         } else {
             for (Iterator itr = getResourceReferenceDescriptors().iterator();
                     itr.hasNext();) {
-                ResourceReferenceDescriptor resourceReference =
-                    (ResourceReferenceDescriptor) itr.next();
+                ResourceReferenceDescriptor resourceReference
+                        = (ResourceReferenceDescriptor) itr.next();
                 if (resourceReference.isResolved()) {
                     return true;
                 }
@@ -2359,22 +2362,21 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     private void addOrMergeEnvironmentProperty(
-                                    EnvironmentProperty environmentProperty) {
+            EnvironmentProperty environmentProperty) {
         try {
-            EnvironmentProperty existing =
-                getEnvironmentPropertyByName(environmentProperty.getName());
-            for (InjectionTarget next :
-                    environmentProperty.getInjectionTargets()) {
+            EnvironmentProperty existing
+                    = getEnvironmentPropertyByName(environmentProperty.getName());
+            for (InjectionTarget next
+                    : environmentProperty.getInjectionTargets()) {
                 existing.addInjectionTarget(next);
             }
 
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             addEnvironmentProperty(environmentProperty);
         }
     }
 
     // END methods closely related to WritableJndiNameEnvironment
-
     /**
      * Return a reference to another ejb by the same name or throw an
      * IllegalArgumentException.
@@ -2419,7 +2421,6 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     /**
      * Adds a role reference.
      */
-
     public void addRoleReference(RoleReference roleReference) {
         //_logger.log(Level.FINE,"add " + roleReference);
         this.getRoleReferences().add(roleReference);
@@ -2429,14 +2430,14 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     /**
      * Removes a role reference.
      */
-
     public void removeRoleReference(RoleReference roleReference) {
         this.getRoleReferences().remove(roleReference);
 
     }
 
     /**
-     * Returns a matching role reference by name or throw an IllegalArgumentException.
+     * Returns a matching role reference by name or throw an
+     * IllegalArgumentException.
      */
     public RoleReference getRoleReferenceByName(String roleReferenceName) {
         for (Iterator itr = this.getRoleReferences().iterator(); itr.hasNext();) {
@@ -2460,8 +2461,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Called by WebArchivist to notify this EjbDescriptor that
-     * it has been associated with a web bundle.
+     * Called by WebArchivist to notify this EjbDescriptor that it has been
+     * associated with a web bundle.
      */
     public void notifyNewModule(WebBundleDescriptor wbd) {
         // add our JNDI entries to the web bundle
@@ -2491,7 +2492,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Returns the full set of method descriptors I have (from all the methods on my home and remote interfaces).
+     * Returns the full set of method descriptors I have (from all the methods
+     * on my home and remote interfaces).
      */
     public Set getMethodDescriptors() {
 
@@ -2537,7 +2539,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * Returns the set of local/remote/no-interface view business method descriptors I have.
+     * Returns the set of local/remote/no-interface view business method
+     * descriptors I have.
      */
     public Set getClientBusinessMethodDescriptors() {
         return getLocalRemoteBusinessMethodDescriptors();
@@ -2574,11 +2577,11 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
             }
 
             if (isLocalBean()) {
-                addAllInterfaceMethodsIn(methods, classLoader.loadClass(getEjbClassName()), 
-                        MethodDescriptor.EJB_LOCAL);                    
+                addAllInterfaceMethodsIn(methods, classLoader.loadClass(getEjbClassName()),
+                        MethodDescriptor.EJB_LOCAL);
             }
         } catch (Throwable t) {
-            _logger.log(Level.SEVERE, "enterprise.deployment.backend.methodClassLoadFailure", 
+            _logger.log(Level.SEVERE, "enterprise.deployment.backend.methodClassLoadFailure",
                     new Object[]{"(EjbDescriptor.getBusinessMethodDescriptors())"});
 
             throw new RuntimeException(t);
@@ -2608,7 +2611,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     protected void addAllInterfaceMethodsIn(Collection methodDescriptors, Class c, String methodIntf) {
         Method[] methods = c.getMethods();
         for (int i = 0; i < methods.length; i++) {
-            if( methods[i].getDeclaringClass() != java.lang.Object.class ) {
+            if (methods[i].getDeclaringClass() != java.lang.Object.class) {
                 methodDescriptors.add(new MethodDescriptor(methods[i], methodIntf));
             }
         }
@@ -2623,9 +2626,9 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
 
         MethodDescriptor match = null;
 
-        for(Object next : businessMethodDescriptors) {
+        for (Object next : businessMethodDescriptors) {
             MethodDescriptor nextMethodDesc = (MethodDescriptor) next;
-            if( nextMethodDesc.equals(methodDesc)) {
+            if (nextMethodDesc.equals(methodDesc)) {
                 match = nextMethodDesc;
                 break;
             }
@@ -2635,8 +2638,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * @return the collection of MethodDescriptors to which ContainerTransactions
-     *         may be assigned.
+     * @return the collection of MethodDescriptors to which
+     * ContainerTransactions may be assigned.
      */
     public Collection getTransactionMethodDescriptors() {
 
@@ -2644,8 +2647,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * @return a collection of MethodDescriptor for methods which may
-     *         have a associated transaction attribute
+     * @return a collection of MethodDescriptor for methods which may have a
+     * associated transaction attribute
      */
     protected Collection getTransactionMethods(ClassLoader classLoader) {
         try {
@@ -2675,7 +2678,7 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
             throw new RuntimeException(t);
         }
 
-         return methods;
+        return methods;
     }
 
     abstract public String getContainerFactoryQualifier();
@@ -2683,14 +2686,13 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     /**
      * Return the set of method objects on my home and remote interfaces.
      */
-
     public Vector getMethods() {
         return getMethods(getEjbBundleDescriptor().getClassLoader());
     }
 
-
     /**
-     * Return the ejb method objects, i.e. the methods on the home and remote interfaces.
+     * Return the ejb method objects, i.e. the methods on the home and remote
+     * interfaces.
      */
     public Vector getMethods(ClassLoader classLoader) {
         try {
@@ -2768,7 +2770,6 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         return ejbReferencersPointingToMe;
     }
 
-
     // Called from EjbBundleDescriptor only
     public void setUniqueId(long id) {
         uniqueId = id;
@@ -2795,26 +2796,33 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         toStringBuffer.append("\n transactionType ").append(transactionType);
         toStringBuffer.append("\n methodContainerTransactions ").append(getMethodContainerTransactions());
         toStringBuffer.append("\n environmentProperties ");
-        if (environmentProperties != null)
+        if (environmentProperties != null) {
             printDescriptorSet(environmentProperties, toStringBuffer);
+        }
         toStringBuffer.append("\n ejbReferences ");
-        if (ejbReferences != null)
+        if (ejbReferences != null) {
             printDescriptorSet(ejbReferences, toStringBuffer);
+        }
         toStringBuffer.append("\n resourceEnvReferences ");
-        if (resourceEnvReferences != null)
+        if (resourceEnvReferences != null) {
             printDescriptorSet(resourceEnvReferences, toStringBuffer);
+        }
         toStringBuffer.append("\n messageDestReferences ");
-        if (messageDestReferences != null)
+        if (messageDestReferences != null) {
             printDescriptorSet(messageDestReferences, toStringBuffer);
+        }
         toStringBuffer.append("\n resourceReferences ");
-        if (resourceReferences != null)
+        if (resourceReferences != null) {
             printDescriptorSet(resourceReferences, toStringBuffer);
+        }
         toStringBuffer.append("\n serviceReferences ");
-        if (serviceReferences != null)
+        if (serviceReferences != null) {
             printDescriptorSet(serviceReferences, toStringBuffer);
+        }
         toStringBuffer.append("\n roleReferences ");
-        if (roleReferences != null)
+        if (roleReferences != null) {
             printDescriptorSet(roleReferences, toStringBuffer);
+        }
         for (Iterator e = this.getPermissionedMethodsByPermission().keySet().iterator(); e.hasNext();) {
             MethodPermission nextPermission = (MethodPermission) e.next();
             toStringBuffer.append("\n method-permission->method: ");
@@ -2826,15 +2834,17 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     private void printDescriptorSet(Set descSet, StringBuffer sbuf) {
         for (Iterator itr = descSet.iterator(); itr.hasNext();) {
             Object obj = itr.next();
-            if (obj instanceof Descriptor)
+            if (obj instanceof Descriptor) {
                 ((Descriptor) obj).print(sbuf);
-            else
+            } else {
                 sbuf.append(obj);
+            }
         }
     }
 
     /**
-     * visit the descriptor and all sub descriptors with a DOL visitor implementation
+     * visit the descriptor and all sub descriptors with a DOL visitor
+     * implementation
      *
      * @param aVisitor a visitor to traverse the descriptors
      */
@@ -2847,7 +2857,8 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * visit the descriptor and all sub descriptors with a DOL visitor implementation
+     * visit the descriptor and all sub descriptors with a DOL visitor
+     * implementation
      *
      * @param aVisitor a visitor to traverse the descriptors
      */
@@ -2856,33 +2867,28 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
     }
 
     /**
-     * This method determines if all the mechanisms defined in the
-     * CSIV2 CompoundSecMechList structure require protected
-     * invocations.
+     * This method determines if all the mechanisms defined in the CSIV2
+     * CompoundSecMechList structure require protected invocations.
      */
     public boolean allMechanismsRequireSSL() {
 
-        if(iorConfigDescriptors== null || iorConfigDescriptors.isEmpty()){
+        if (iorConfigDescriptors == null || iorConfigDescriptors.isEmpty()) {
             return false;
         }
-        
+
         for (EjbIORConfigurationDescriptor iorDesc : iorConfigDescriptors) {
 
-            if (EjbIORConfigurationDescriptor.REQUIRED.equalsIgnoreCase
-                    (iorDesc.getConfidentiality())) {
+            if (EjbIORConfigurationDescriptor.REQUIRED.equalsIgnoreCase(iorDesc.getConfidentiality())) {
                 continue;
 
-            } else if (EjbIORConfigurationDescriptor.REQUIRED.equalsIgnoreCase
-                    (iorDesc.getConfidentiality())) {
+            } else if (EjbIORConfigurationDescriptor.REQUIRED.equalsIgnoreCase(iorDesc.getConfidentiality())) {
 
                 continue;
 
-            } else if (EjbIORConfigurationDescriptor.REQUIRED.equalsIgnoreCase
-                    (iorDesc.getEstablishTrustInTarget())) {
+            } else if (EjbIORConfigurationDescriptor.REQUIRED.equalsIgnoreCase(iorDesc.getEstablishTrustInTarget())) {
                 continue;
 
-            } else if (EjbIORConfigurationDescriptor.REQUIRED.equalsIgnoreCase
-                    (iorDesc.getEstablishTrustInClient())) {
+            } else if (EjbIORConfigurationDescriptor.REQUIRED.equalsIgnoreCase(iorDesc.getEstablishTrustInClient())) {
                 continue;
             }
 
@@ -2892,4 +2898,3 @@ public abstract class EjbDescriptor extends CommonResourceDescriptor
         return true;
     }
 }
-    
